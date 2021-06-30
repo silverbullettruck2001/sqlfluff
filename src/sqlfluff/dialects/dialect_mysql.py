@@ -682,18 +682,9 @@ class SelectClauseSegment(BaseSegment):
         enforce_whitespace_preceeding_terminator=True,
     )
 
-    parse_grammar = Sequence(
-        "SELECT",
-        Ref("SelectClauseModifierSegment", optional=True),
-        Indent,
-        Delimited(
-            ansi_dialect.get_segment("SelectClauseElementSegment"),
-            allow_trailing=True,
-        ),
-        # NB: The Dedent for the indent above lives in the
-        # SelectStatementSegment so that it sits in the right
-        # place corresponding to the whitespace.
-    )
+    parse_grammar = ansi_dialect.get_segment(
+        "SelectClauseSegment"
+    ).parse_grammar.copy()
 
 
 # I am unclear why I have to override this segement, but if I don't then new segments don't parse
@@ -704,21 +695,10 @@ class SelectStatementSegment(BaseSegment):
 
     https://dev.mysql.com/doc/refman/5.7/en/select.html
     """
-
     type = "select_statement"
-    # match grammar. This one makes sense in the context of knowing that it's
-    # definitely a statement, we just don't know what type yet.
-    match_grammar = StartsWith(
-        # NB: In bigquery, the select clause may include an EXCEPT, which
-        # will also match the set operator, but by starting with the whole
-        # select clause rather than just the SELECT keyword, we mitigate that
-        # here.
-        Ref("SelectClauseSegment"),
-        terminator=OneOf(
-            Ref("SetOperatorSegment"), Ref("WithNoSchemaBindingClauseSegment")
-        ),
-        enforce_whitespace_preceeding_terminator=True,
-    )
+    match_grammar = ansi_dialect.get_segment(
+        "SelectStatementSegment"
+    ).match_grammar.copy()
 
     # Inherit most of the parse grammar from the original.
     parse_grammar = UnorderedSelectStatementSegment.parse_grammar.copy(
