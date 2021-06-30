@@ -653,28 +653,13 @@ class UnorderedSelectStatementSegment(BaseSegment):
 @mysql_dialect.segment(replace=True)
 class SelectClauseElementSegment(BaseSegment):
     """An element in the targets of a select statement."""
-
     type = "select_clause_element"
-    # Important to split elements before parsing, otherwise debugging is really hard.
-    match_grammar = GreedyUntil(
-        "INTO",
-        "FROM",
-        "WHERE",
-        "ORDER",
-        "LIMIT",
-        Ref("CommaSegment"),
-        Ref("SetOperatorSegment"),
-        enforce_whitespace_preceeding_terminator=True,
-    )
-
-    parse_grammar = OneOf(
-        # *, blah.*, blah.blah.*, etc.
-        Ref("WildcardExpressionSegment"),
-        Sequence(
-            Ref("BaseExpressionElementGrammar"),
-            Ref("AliasExpressionSegment", optional=True),
-        ),
-    )
+    match_grammar = ansi_dialect.get_segment(
+        "SelectClauseElementSegment"
+    ).match_grammar.copy()
+    parse_grammar = ansi_dialect.get_segment(
+        "SelectClauseElementSegment"
+    ).parse_grammar.copy()
 
 
 # I am unclear why I have to override this segement, but if I don't then new segments won't parse
