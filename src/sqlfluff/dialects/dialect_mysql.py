@@ -634,17 +634,15 @@ class UnorderedSelectStatementSegment(BaseSegment):
         enforce_whitespace_preceeding_terminator=True,
     )
 
-    parse_grammar = Sequence(
-        Ref("SelectClauseSegment"),
-        # Dedent for the indent in the select clause.
-        # It's here so that it can come AFTER any whitespace.
-        Dedent,
-        Ref("IntoClauseSegment", optional=True),
-        Ref("FromClauseSegment", optional=True),
-        Ref("WhereClauseSegment", optional=True),
-        Ref("GroupByClauseSegment", optional=True),
-        Ref("HavingClauseSegment", optional=True),
-        Ref("ForClauseSegment", optional=True),
+    # Note we're copying twice, once to add IntoClauseSegment and once to add
+    # ForClauseSegment.
+    parse_grammar = ansi_dialect.get_segment(
+        "UnorderedSelectStatementSegment"
+    ).parse_grammar.copy(
+        insert=[Ref("IntoClauseSegment", optional=True)],
+        before=Ref("FromClauseSegment", optional=True),
+    ).copy(
+        insert=[Ref("ForClauseSegment", optional=True)]
     )
 
 
