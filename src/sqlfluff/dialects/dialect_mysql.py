@@ -19,10 +19,6 @@ from sqlfluff.core.parser import (
     SymbolSegment,
     Delimited,
     RegexParser,
-    Indent,
-    StartsWith,
-    GreedyUntil,
-    Dedent,
 )
 from sqlfluff.core.dialects import load_raw_dialect
 
@@ -609,10 +605,12 @@ class IntoClauseSegment(BaseSegment):
 @mysql_dialect.segment(replace=True)
 class UnorderedSelectStatementSegment(BaseSegment):
     """A `SELECT` statement without any ORDER clauses or later.
+
     This is designed for use in the context of set operations,
     for other use cases, we should use the main
     SelectStatementSegment.
     """
+
     type = "select_statement"
     match_grammar = ansi_dialect.get_segment(
         "UnorderedSelectStatementSegment"
@@ -620,24 +618,23 @@ class UnorderedSelectStatementSegment(BaseSegment):
     match_grammar.terminator = match_grammar.terminator.copy(
         insert=[Ref("IntoClauseSegment")],
         before=Ref("SetOperatorSegment"),
-    ).copy(
-        insert=[Ref("ForClauseSegment")]
-    )
+    ).copy(insert=[Ref("ForClauseSegment")])
     # Note we're copying twice, once to add IntoClauseSegment and once to add
     # ForClauseSegment.
-    parse_grammar = ansi_dialect.get_segment(
-        "UnorderedSelectStatementSegment"
-    ).parse_grammar.copy(
-        insert=[Ref("IntoClauseSegment", optional=True)],
-        before=Ref("FromClauseSegment", optional=True),
-    ).copy(
-        insert=[Ref("ForClauseSegment", optional=True)]
+    parse_grammar = (
+        ansi_dialect.get_segment("UnorderedSelectStatementSegment")
+        .parse_grammar.copy(
+            insert=[Ref("IntoClauseSegment", optional=True)],
+            before=Ref("FromClauseSegment", optional=True),
+        )
+        .copy(insert=[Ref("ForClauseSegment", optional=True)])
     )
 
 
 @mysql_dialect.segment(replace=True)
 class SelectClauseElementSegment(BaseSegment):
     """An element in the targets of a select statement."""
+
     type = "select_clause_element"
     match_grammar = ansi_dialect.get_segment(
         "SelectClauseElementSegment"
@@ -652,13 +649,11 @@ class SelectClauseSegment(BaseSegment):
     """A group of elements in a select target statement."""
 
     type = "select_clause"
-    match_grammar = ansi_dialect.get_segment(
-        "SelectClauseSegment"
-    ).match_grammar.copy()
-    match_grammar.terminator = match_grammar.terminator.copy(insert=[Ref("IntoKeywordSegment")])
-    parse_grammar = ansi_dialect.get_segment(
-        "SelectClauseSegment"
-    ).parse_grammar.copy()
+    match_grammar = ansi_dialect.get_segment("SelectClauseSegment").match_grammar.copy()
+    match_grammar.terminator = match_grammar.terminator.copy(
+        insert=[Ref("IntoKeywordSegment")]
+    )
+    parse_grammar = ansi_dialect.get_segment("SelectClauseSegment").parse_grammar.copy()
 
 
 @mysql_dialect.segment(replace=True)
@@ -667,6 +662,7 @@ class SelectStatementSegment(BaseSegment):
 
     https://dev.mysql.com/doc/refman/5.7/en/select.html
     """
+
     type = "select_statement"
     match_grammar = ansi_dialect.get_segment(
         "SelectStatementSegment"
