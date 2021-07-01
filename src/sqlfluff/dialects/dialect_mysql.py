@@ -669,19 +669,10 @@ class SelectClauseSegment(BaseSegment):
     """A group of elements in a select target statement."""
 
     type = "select_clause"
-    match_grammar = StartsWith(
-        Sequence("SELECT", Ref("WildcardExpressionSegment", optional=True)),
-        terminator=OneOf(
-            "INTO",
-            "FROM",
-            "WHERE",
-            "ORDER",
-            "LIMIT",
-            Ref("SetOperatorSegment"),
-        ),
-        enforce_whitespace_preceeding_terminator=True,
-    )
-
+    match_grammar = ansi_dialect.get_segment(
+        "SelectClauseSegment"
+    ).match_grammar.copy()
+    match_grammar.terminator = match_grammar.terminator.copy(insert=[Ref("IntoKeywordSegment")])
     parse_grammar = ansi_dialect.get_segment(
         "SelectClauseSegment"
     ).parse_grammar.copy()
